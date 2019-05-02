@@ -21,7 +21,7 @@ class UserRegistration(BaseResource):
         data = parser.parse_args()
 
         if UserModel.find_by_username(data['username']):
-            self.response(
+            return self.response(
                 {'message': 'User {} already exists'.format(data['username'])}, 409
             )
 
@@ -34,7 +34,7 @@ class UserRegistration(BaseResource):
             new_user.add_user()
             access_token = create_access_token(identity=data['username'])
             refresh_token = create_refresh_token(identity=data['username'])
-            self.response(
+            return self.response(
                 {
                     'message': 'User {} was created'.format(data['username']),
                     'accessToken': access_token,
@@ -42,7 +42,7 @@ class UserRegistration(BaseResource):
                 }, 201
             )
         except:
-            self.response({'message': 'Something went wrong'}, 500)
+            return self.response({'message': 'Something went wrong'}, 500)
 
 
 class UserLogin(BaseResource):
@@ -50,15 +50,14 @@ class UserLogin(BaseResource):
         data = parser.parse_args()
         current_user = UserModel.find_by_username(data['username'])
         if not current_user:
-            self.response(
+            return self.response(
                 {'message': 'User {} doesn\'t exists'.format(data['username'])}, 401
             )
-            return
 
         if UserModel.verify_hash(data['password'], current_user.password):
             access_token = create_access_token(identity=data['username'])
             refresh_token = create_refresh_token(identity=data['username'])
-            self.response(
+            return self.response(
                 {
                     'message': 'Logged in as {}'.format(current_user.username),
                     'accessToken': access_token,
@@ -66,7 +65,7 @@ class UserLogin(BaseResource):
                 }, 300
             )
         else:
-            self.response({'message': 'Wrong credentials'}, 401)
+            return self.response({'message': 'Wrong credentials'}, 401)
 
 
 class UserLogoutAccess(BaseResource):
@@ -76,9 +75,9 @@ class UserLogoutAccess(BaseResource):
         try:
             revoked_token = RevokedTokenModel(jti=jti)
             revoked_token.add()
-            self.response({'message', 'Access token has been revoked'})
+            return self.response({'message', 'Access token has been revoked'})
         except:
-            self.response({'message': 'Something went wrong'}, 500)
+            return self.response({'message': 'Something went wrong'}, 500)
 
 
 class UserLogoutRefresh(BaseResource):
@@ -88,9 +87,9 @@ class UserLogoutRefresh(BaseResource):
         try:
             revoked_token = RevokedTokenModel(jti=jti)
             revoked_token.add()
-            self.response({'message': 'Refresh token has been revoked'})
+            return self.response({'message': 'Refresh token has been revoked'})
         except:
-            self.response({'message': 'Something went wrong'}, 500)
+            return self.response({'message': 'Something went wrong'}, 500)
 
 
 class TokenRefresh(BaseResource):
@@ -98,4 +97,4 @@ class TokenRefresh(BaseResource):
     def post(self):
         current_user = get_jwt_identity()
         access_token = create_access_token(current_user)
-        self.response({'accessToken': access_token})
+        return self.response({'accessToken': access_token})

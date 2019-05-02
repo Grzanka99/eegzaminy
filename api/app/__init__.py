@@ -8,11 +8,17 @@ def load_settings(app: Flask, settings_obj: object):
 
 def load_extensions(app: Flask):
     from .extensions import ma, db, cors, jwt
+    from .models import RevokedTokenModel
 
     db.init_app(app)
     ma.init_app(app)
     cors.init_app(app)
     jwt.init_app(app)
+
+    @jwt.token_in_blacklist_loader
+    def check_if_token_in_blacklist(decrypted_token):
+        jti = decrypted_token['jti']
+        return RevokedTokenModel.is_jti_blacklisted(jti)
 
 
 def load_hooks(app: Flask):

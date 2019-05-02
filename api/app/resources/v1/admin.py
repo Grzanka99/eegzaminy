@@ -4,7 +4,8 @@ from ...models import (
     BasicExamSchema,
     ExamsList,
     ExamsListSchema,
-    UserModel
+    UserModel,
+    RevokedTokenModel
 )
 from flask_jwt_extended import (
     create_access_token,
@@ -67,13 +68,27 @@ class UserLogin(BaseResource):
 
 
 class UserLogoutAccess(BaseResource):
+    @jwt_required
     def post(self):
-        return {'message': 'user logout'}
+        jti = get_raw_jwt()['jti']
+        try:
+            revoked_token = RevokedTokenModel(jti=jti)
+            revoked_token.add()
+            return {'message': 'Access token has been revoked'}, 200
+        except:
+            return {'message': 'Something went wrong'}, 500
 
 
 class UserLogoutRefresh(BaseResource):
+    @jwt_refresh_token_required
     def post(self):
-        return {'message': 'user logout'}
+        jti = get_raw_jwt()['jti']
+        try:
+            revoked_token = RevokedTokenModel(jti=jti)
+            revoked_token.add()
+            return {'message': 'Refresh token has been revoked'}, 200
+        except:
+            return {'message': 'Something went wrong'}, 500
 
 
 class TokenRefresh(BaseResource):
